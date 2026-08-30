@@ -16,6 +16,16 @@ assessment.codes       # list[ReasonCode]
 assessment.confidence  # 1.0 when every attempted lookup resolved
 ```
 
+Inside an existing event loop:
+
+```python
+from domain_vet import Config, agather_facts, score
+
+config = Config(brands=("acme-supply.com",))
+facts = await agather_facts("acme-supply.com", "buyer@acme-supply.com", config)
+assessment = score(facts, config)
+```
+
 The exact lane and codes depend on live DNS and registry responses. A complete,
 established domain with a matching email domain normally returns `Lane.ALLOW`; lookup
 failures or incomplete facts force at least `Lane.REVIEW`.
@@ -38,8 +48,15 @@ uv pip install .
 
 - Failed or deliberately skipped facts cannot produce `allow`; unknown is never clean.
 - Review volume therefore tracks lookup success rate. Measure it before tuning signals.
-- `gather_facts()` accepts a domain or URL, raises `ValueError` for unusable input, and
-  cannot run inside an existing event loop because it calls `asyncio.run()` internally.
+- `gather_facts()` accepts a domain or URL and is the synchronous `asyncio.run()` wrapper.
+  Event-loop callers await `agather_facts()` with the same arguments instead. Both raise
+  `ValueError` for unusable input and use the same concurrent lookup pipeline.
+- Disposable-domain membership comes from the fixed dataset installed with
+  `disposable-email-domains`; it is shared provider intelligence rather than consumer
+  policy. Freemail membership remains replaceable through `Config.freemail_domains`.
+- Dependency refresh controls the packaged disposable and default freemail datasets.
+  V1 accepts lockfile staleness and provides no automatic update cadence or freshness
+  guarantee.
 - DNS and registration-age lookups run concurrently. `per_lookup_timeout` bounds each
   transport, but there is no aggregate timeout for the whole gather.
 - The package has no domain-reputation signal because no free source permits the intended
@@ -67,9 +84,16 @@ uv pip install .
 ## Public API
 
 The package root exports `Assessment`, `Config`, `DomainFacts`, `EmailFacts`, `Fact`,
-`Lane`, `LookupStatus`, `ReasonCode`, `Signal`, `gather_facts`, and `score`.
+`Lane`, `LookupStatus`, `ReasonCode`, `Signal`, `agather_facts`, `gather_facts`, and
+`score`.
 
 ```python
+async def agather_facts(
+    domain: str,
+    email: str | None = None,
+    config: Config | None = None,
+) -> DomainFacts: ...
+
 def gather_facts(
     domain: str,
     email: str | None = None,
@@ -78,6 +102,13 @@ def gather_facts(
 
 def score(facts: DomainFacts, config: Config | None = None) -> Assessment: ...
 ```
+
+Synchronous callers use `gather_facts()`, which invokes `asyncio.run()`; callers already
+inside an event loop await `agather_facts()`. Both entry points use the same concurrent
+pipeline and classify email with the installed disposable dataset plus the default or
+consumer-replaced freemail set. Dependency refresh is the only v1 freshness mechanism
+for the packaged datasets; v1 provides no automatic update cadence or freshness
+guarantee.
 
 ## Development checks
 

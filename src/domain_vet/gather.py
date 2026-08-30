@@ -1,4 +1,4 @@
-"""Synchronous fact gathering over cancellable async I/O."""
+"""Fact gathering over cancellable async I/O."""
 
 import asyncio
 from dataclasses import dataclass
@@ -215,14 +215,14 @@ async def _gather(domain: str, config: Config) -> tuple[DnsFacts, Fact]:
     return dns_facts, created
 
 
-def gather_facts(
+async def agather_facts(
     domain: str,
     email: str | None = None,
     config: Config | None = None,
 ) -> DomainFacts:
     config = config or Config()
     normalized = normalize_domain(domain)
-    dns_facts, created = asyncio.run(_gather(normalized, config))
+    dns_facts, created = await _gather(normalized, config)
     return DomainFacts(
         domain=normalized,
         as_of=datetime.now(UTC),
@@ -233,3 +233,11 @@ def gather_facts(
         has_mail_auth=dns_facts.has_mail_auth,
         email=classify_email(email, config),
     )
+
+
+def gather_facts(
+    domain: str,
+    email: str | None = None,
+    config: Config | None = None,
+) -> DomainFacts:
+    return asyncio.run(agather_facts(domain, email, config))
