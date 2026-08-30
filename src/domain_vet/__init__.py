@@ -14,7 +14,7 @@ from domain_vet.core import (
     Signal,
     score,
 )
-from domain_vet.gather import gather_facts
+from domain_vet.gather import agather_facts, gather_facts
 
 __version__ = version("domain-vet")
 __all__ = [
@@ -28,5 +28,6 @@ __all__ = [
     "ReasonCode",
     "Signal",
     "score",
+    "agather_facts",
     "gather_facts",
 ]

@@ -17,6 +17,7 @@ from domain_vet.gather import (
     _gather,
     _gather_age,
     _gather_dns,
+    agather_facts,
     gather_facts,
     normalize_domain,
 )
@@ -497,7 +498,7 @@ async def test_dns_and_age_start_concurrently(monkeypatch):
     assert resolver.lifetime == Config().per_lookup_timeout
 
 
-def test_gather_facts_is_synchronous_and_assembles(monkeypatch):
+async def test_agather_facts_assembles_inside_running_event_loop(monkeypatch):
     async def fake_dns(domain, resolver):
         from domain_vet.gather import DnsFacts
 
@@ -515,7 +516,7 @@ def test_gather_facts_is_synchronous_and_assembles(monkeypatch):
     monkeypatch.setattr("domain_vet.gather._gather_age", fake_age)
 
     config = Config(freemail_domains=frozenset({"mail.example"}))
-    facts = gather_facts("Example.com", "a@mail.example", config)
+    facts = await agather_facts("Example.com", "a@mail.example", config)
     assert facts.domain == "example.com"
     assert facts.created.value == WHEN
     assert facts.email.is_freemail is True
@@ -523,12 +524,24 @@ def test_gather_facts_is_synchronous_and_assembles(monkeypatch):
     assert facts.as_of is not None
 
 
+def test_gather_facts_delegates_to_async_entry_point(monkeypatch):
+    expected = object()
+
+    async def fake_gather(domain, email=None, config=None):
+        assert (domain, email, config) == ("Example.com", "a@example.com", None)
+        return expected
+
+    monkeypatch.setattr("domain_vet.gather.agather_facts", fake_gather)
+    assert gather_facts("Example.com", "a@example.com") is expected
+
+
 def test_gather_facts_rejects_unusable_input():
     with pytest.raises(ValueError):
         gather_facts("")
 
 
-def test_gather_facts_is_exported_from_package_root():
+def test_gather_entry_points_are_exported_from_package_root():
+    assert domain_vet.agather_facts is agather_facts
     assert domain_vet.gather_facts is gather_facts
 
 
