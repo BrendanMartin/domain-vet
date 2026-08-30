@@ -1,0 +1,50 @@
+{
+  "age": {
+    "domain": "google.com",
+    "created": "1997-09-15T07:00:00+00:00"
+  },
+  "dns": {
+    "domain": "dns.google",
+    "nxdomain": {
+      "domain": "domain-vet-does-not-exist.invalid",
+      "queries": [
+        {"name": "domain-vet-does-not-exist.invalid", "rdtype": "MX"},
+        {"name": "domain-vet-does-not-exist.invalid", "rdtype": "A"},
+        {"name": "domain-vet-does-not-exist.invalid", "rdtype": "AAAA"},
+        {"name": "domain-vet-does-not-exist.invalid", "rdtype": "TXT"},
+        {"name": "_dmarc.domain-vet-does-not-exist.invalid", "rdtype": "TXT"}
+      ]
+    },
+    "queries": {
+      "A": {
+        "name": "dns.google",
+        "rdtype": "A",
+        "outcome": "records",
+        "records": ["8.8.4.4", "8.8.8.8"]
+      },
+      "AAAA": {
+        "name": "dns.google",
+        "rdtype": "AAAA",
+        "outcome": "records",
+        "records": ["2001:4860:4860::8844", "2001:4860:4860::8888"]
+      },
+      "MX": {
+        "name": "dns.google",
+        "rdtype": "MX",
+        "outcome": "NoAnswer"
+      },
+      "TXT": {
+        "name": "dns.google",
+        "rdtype": "TXT",
+        "outcome": "records",
+        "records": [["https://xkcd.com/1361/"], ["v=spf1 -all"]]
+      },
+      "_dmarc.TXT": {
+        "name": "_dmarc.dns.google",
+        "rdtype": "TXT",
+        "outcome": "records",
+        "records": [["v=DMARC1; p=reject; rua=mailto:mailauth-reports@google.com"]]
+      }
+    }
+  }
+}

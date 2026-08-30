@@ -1,0 +1,12 @@
+# Local audit artifacts
+*.audit-log.md
+
+# Private project context and local worktrees
+docs/
+PROJECT.md
+.claude/
+
+# Python development artifacts
+__pycache__/
+.pytest_cache/
+.venv/
